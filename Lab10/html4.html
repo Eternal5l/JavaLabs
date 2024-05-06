@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Список завдань (IndexedDB)</title>
+</head>
+<body>
+  <h1>Список завдань</h1>
+  <input type="text" id="taskInput">
+  <button onclick="addTask()">Додати завдання</button>
+  <button onclick="deleteAllTasks()">Видалити всі завдання</button>
+  <ul id="taskList"></ul>
+
+  <script>
+    var db;
+    var request = window.indexedDB.open('tasksDB', 1);
+
+    request.onerror = function(event) {
+      console.log('Database error: ' + event.target.errorCode);
+    };
+
+    request.onsuccess = function(event) {
+      db = event.target.result;
+      displayTasks();
+    };
+
+    request.onupgradeneeded = function(event) {
+      db = event.target.result;
+      var objectStore = db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
+      objectStore.createIndex('task', 'task', { unique: false });
+    };
+
+    function addTask() {
+      var taskInput = document.getElementById('taskInput');
+      var task = taskInput.value.trim();
+      if (task !== '') {
+        var transaction = db.transaction(['tasks'], 'readwrite');
+        var objectStore = transaction.objectStore('tasks');
+        var newTask = { task: task };
+        objectStore.add(newTask);
+        displayTasks();
+        taskInput.value = '';
+      }
+    }
+
+    function deleteAllTasks() {
+      var transaction = db.transaction(['tasks'], 'readwrite');
+      var objectStore = transaction.objectStore('tasks');
+      var objectStoreRequest = objectStore.clear();
+      objectStoreRequest.onsuccess = function() {
+        displayTasks();
+      };
+    }
+
+    function displayTasks() {
+      var taskList = document.getElementById('taskList');
+      taskList.innerHTML = '';
+      var transaction = db.transaction(['tasks'], 'readonly');
+      var objectStore = transaction.objectStore('tasks');
+      objectStore.openCursor().onsuccess = function(event) {
+        var cursor = event.target.result;
+        if (cursor) {
+          var li = document.createElement('li');
+          li.textContent = cursor.value.task;
+          taskList.appendChild(li);
+          cursor.continue();
+        }
+      };
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Збереження текстового файлу</title>
+</head>
+<body>
+  <h1>Збереження текстового файлу</h1>
+  <textarea id="textInput" rows="10" cols="50"></textarea><br>
+  <button onclick="saveTextAsFile()">Зберегти як файл</button>
+
+  <script>
+    function saveTextAsFile() {
+      var textToSave = document.getElementById('textInput').value;
+      var blob = new Blob([textToSave], { type: 'text/plain' });
+      var fileName = prompt('Введіть ім\'я файлу:', 'text_file.txt');
+      if (fileName) {
+        var downloadLink = document.createElement('a');
+        downloadLink.download = fileName;
+        downloadLink.innerHTML = 'Download File';
+        if (window.webkitURL != null) {
+          downloadLink.href = window.webkitURL.createObjectURL(blob);
+        } else {
+          downloadLink.href = window.URL.createObjectURL(blob);
+          downloadLink.onclick = destroyClickedElement;
+          downloadLink.style.display = 'none';
+          document.body.appendChild(downloadLink);
+        }
+        downloadLink.click();
+      }
+    }
+
+    function destroyClickedElement(event) {
+      document.body.removeChild(event.target);
+    }
+  </script>
+</body>
+</html>

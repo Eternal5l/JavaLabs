@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Курси криптовалют</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: 80%;
+        }
+
+        .currency-card {
+            width: 200px;
+            height: 150px;
+            border: 1px solid #ccc;
+            margin: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .currency-name {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .currency-price {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        Завантаження...
+    </div>
+
+    <div id="currency-container" class="container" style="display: none;">
+        <div id="bitcoin-card" class="currency-card">
+            <span class="currency-name">Bitcoin</span>
+            <span class="currency-price" id="bitcoin-price"></span>
+        </div>
+        <div id="ethereum-card" class="currency-card">
+            <span class="currency-name">Ethereum</span>
+            <span class="currency-price" id="ethereum-price"></span>
+        </div>
+        <div id="tether-card" class="currency-card">
+            <span class="currency-name">Tether</span>
+            <span class="currency-price" id="tether-price"></span>
+        </div>
+        <div id="binance-coin-card" class="currency-card">
+            <span class="currency-name">Binance Coin</span>
+            <span class="currency-price" id="binance-coin-price"></span>
+        </div>
+        <div id="cardano-card" class="currency-card">
+            <span class="currency-name">Cardano</span>
+            <span class="currency-price" id="cardano-price"></span>
+        </div>
+    </div>
+
+    <script>
+        const websocket = new WebSocket('ws://localhost:8080');
+
+        websocket.onopen = function() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('currency-container').style.display = 'flex';
+
+            getPrices();
+        };
+
+        websocket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'prices') {
+                const prices = data.data;
+                for (const currency in prices) {
+                    document.getElementById(currency + '-price').textContent = prices[currency].toFixed(2);
+                }
+            }
+        };
+
+        function getPrices() {
+            websocket.send(JSON.stringify({ type: 'getPrices' }));
+        }
+
+        setInterval(getPrices, Math.random() * (20000 - 1000) + 1000); // Оновлення через випадковий час
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Список завдань</title>
+</head>
+<body>
+  <h1>Список завдань</h1>
+  <input type="text" id="taskInput">
+  <button onclick="addTask()">Додати завдання</button>
+  <button onclick="deleteAllTasks()">Видалити всі завдання</button>
+  <ul id="taskList"></ul>
+
+  <script>
+    // Функція додавання завдання до списку
+    function addTask() {
+      var taskInput = document.getElementById('taskInput');
+      var task = taskInput.value.trim();
+      if (task !== '') {
+        var tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        tasks.push(task);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        updateTaskList();
+        taskInput.value = '';
+        // Оновлення інших вікон, якщо вони є
+        broadcastTaskUpdate();
+      }
+    }
+
+    // Функція видалення всіх завдань
+    function deleteAllTasks() {
+      localStorage.removeItem('tasks');
+      updateTaskList();
+      // Оновлення інших вікон, якщо вони є
+      broadcastTaskUpdate();
+    }
+
+    // Функція оновлення списку завдань
+    function updateTaskList() {
+      var taskList = document.getElementById('taskList');
+      taskList.innerHTML = '';
+      var tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      tasks.forEach(function(task) {
+        var li = document.createElement('li');
+        li.textContent = task;
+        taskList.appendChild(li);
+      });
+    }
+
+    // Функція оновлення списку завдань в інших вікнах
+    function broadcastTaskUpdate() {
+      var data = JSON.stringify({ action: 'update' });
+      localStorage.setItem('taskUpdate', data);
+    }
+
+    // Перевірка оновлення списку завдань при завантаженні сторінки
+    window.onload = function() {
+      updateTaskList();
+      // Слухаємо події з інших вікон
+      window.addEventListener('storage', function(event) {
+        if (event.key === 'taskUpdate') {
+          updateTaskList();
+        }
+      });
+    };
+
+    // Механізм керування пріоритетом вкладок браузера
+    var tabs = JSON.parse(localStorage.getItem('tabs')) || [];
+    if (tabs.length === 0) {
+      tabs.push('Головна вкладка');
+      localStorage.setItem('tabs', JSON.stringify(tabs));
+    } else {
+      tabs.push('Другорядна вкладка');
+      localStorage.setItem('tabs', JSON.stringify(tabs));
+    }
+
+    // Перевірка лідера при закритті головної вкладки
+    window.onunload = function() {
+      var tabs = JSON.parse(localStorage.getItem('tabs')) || [];
+      var index = tabs.indexOf('Головна вкладка');
+      if (index !== -1) {
+        tabs.splice(index, 1);
+        if (tabs.length > 0) {
+          tabs[0] = 'Головна вкладка';
+        }
+        localStorage.setItem('tabs', JSON.stringify(tabs));
+        // Оновлюємо статус лідера
+        if (tabs[0] !== 'Головна вкладка') {
+          localStorage.setItem('leader', tabs[0]);
+        }
+      }
+    };
+  </script>
+</body>
+</html>
